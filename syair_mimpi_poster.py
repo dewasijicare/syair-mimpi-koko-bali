@@ -7,12 +7,13 @@ import time
 import os
 
 # ======================================
-# 🔑 KONFIGURASI API
+# 🔑 KONFIGURASI API (AMAN DARI STREAMLIT SECRETS)
 # ======================================
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 st.set_page_config(page_title="Syair Mimpi Koko Bali", page_icon="🌺", layout="centered")
 st.title("🌺 SYAIR MIMPI KOKO BALI")
-st.caption("Panel otomatis untuk membuat poster mimpi bergaya klasik Bali dengan tafsir orisinal dan visual mistis.")
+st.caption("Panel otomatis untuk membuat poster mimpi bergaya klasik Bali dengan tafsir orisinal dan cerita mistis.")
 
 
 # ======================================
@@ -53,18 +54,17 @@ def generate_unique_tafsir(hewan):
 
 
 # ======================================
-# 🖼️ PEMBUAT POSTER
+# 🖼️ PEMBUAT POSTER DENGAN CERITA MISTIS
 # ======================================
 def generate_poster(selected_hewan=None):
     if selected_hewan == "Acak" or selected_hewan is None:
         kode = random.choice(list(HEWAN_KODE.keys()))
         hewan = HEWAN_KODE[kode]
     else:
-        # Ambil angka dari teks dropdown misal "07 – Babi"
         kode = int(selected_hewan.split("–")[0].strip())
         hewan = selected_hewan.split("–")[1].strip()
 
-    kode_str = f"{kode:02d}"  # format jadi dua digit (01, 02, ...)
+    kode_str = f"{kode:02d}"
     tafsir = generate_unique_tafsir(hewan)
     tanggal = datetime.now().strftime("%d %B %Y")
 
@@ -72,10 +72,12 @@ def generate_poster(selected_hewan=None):
     fokus = [str(random.randint(10, 99)), str(random.randint(10, 99))]
 
     tema_visual = random.choice([
-        f"adegan magis di malam hari di mana seekor {hewan.lower()} muncul di antara cahaya bulan, dikelilingi ornamen Bali mistis",
-        f"ilustrasi simbolik dengan {hewan.lower()} berada di tengah pusaran energi spiritual dan bunga kamboja, gaya vintage klasik Bali",
-        f"adegan mistik rakyat Bali menggambarkan {hewan.lower()} sebagai penjaga mimpi di langit berornamen tradisional",
-        f"lukisan klasik Bali dengan {hewan.lower()} muncul di antara asap dupa dan sinar cahaya ilahi, menggambarkan tafsir mimpi kuno"
+        f"adegan malam mistis di mana seorang manusia sedang bermimpi di bawah cahaya bulan, "
+        f"dan sosok {hewan.lower()} muncul dari kabut spiritual di sekitarnya",
+        f"lukisan tradisional Bali menggambarkan pendeta dan {hewan.lower()} dalam upacara spiritual di candi kuno yang diterangi dupa dan cahaya lilin",
+        f"pemandangan mistik di dunia mimpi di mana {hewan.lower()} melayang di udara di dekat seorang manusia yang bermeditasi dalam ketenangan",
+        f"adegan simbolik menampilkan {hewan.lower()} dan seorang manusia di tengah hutan Bali dengan cahaya lembut spiritual mengelilingi mereka",
+        f"komposisi bergaya lukisan kuno menampilkan {hewan.lower()} muncul di balik kabut di hadapan manusia yang berdoa, dikelilingi ornamen bunga kamboja",
     ])
 
     prompt = f"""
@@ -118,12 +120,11 @@ def generate_poster(selected_hewan=None):
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# Buat dropdown dengan angka + nama
 hewan_list = ["Acak"] + [f"{k:02d} – {v}" for k, v in HEWAN_KODE.items()]
 selected_hewan = st.selectbox("Pilih Hewan untuk Tafsir:", hewan_list)
 
 if st.button("✨ Generate Syair Hari Ini"):
-    with st.spinner("🪄 Sedang merangkai mimpi dan menciptakan visual mistis..."):
+    with st.spinner("🪄 Merangkai kisah mistis dan menvisualisasikan mimpi..."):
         time.sleep(1)
         filename, hewan, kode, angka_pelarian, fokus, tafsir = generate_poster(selected_hewan)
 
