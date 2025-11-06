@@ -7,13 +7,13 @@ import time
 import os
 
 # ======================================
-# 🔑 KONFIGURASI API (AMAN)
+# 🔑 KONFIGURASI API
 # ======================================
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 st.set_page_config(page_title="Syair Mimpi Koko Bali", page_icon="🌺", layout="centered")
 st.title("🌺 SYAIR MIMPI KOKO BALI")
-st.caption("Panel otomatis untuk membuat poster mimpi bergaya klasik Bali dengan tafsir orisinal, naratif, dan prompt animasi otomatis.")
+st.caption("Panel otomatis untuk membuat poster mimpi bergaya klasik Bali dengan tafsir orisinal dan prompt animasi otomatis.")
 
 
 # ======================================
@@ -61,13 +61,29 @@ def generate_animation_prompt(description):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Kamu adalah asisten kreatif yang menulis prompt animasi 7 detik untuk Pika Labs. Fokus pada adegan utama (orang, hewan, atau objek di tengah). Buat deskripsi lembut dan sinematik dalam bahasa Inggris. Jangan ubah latar, teks, atau bingkai. Gunakan gaya mistis Bali vintage."},
-                {"role": "user", "content": f"Gambar menggambarkan: {description}. Tulis prompt animasi yang cocok untuk membuat bagian utama gambar bergerak dengan lembut dan artistik."}
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a creative assistant who writes animation instructions for turning a static image "
+                        "into a short 7-second video. Only describe gentle motion of the *main subjects* (animals, mystical figures, or symbols). "
+                        "Do NOT invent a new story or background. Keep background, text, and frame still. "
+                        "Describe soft, natural movements like breathing, glowing, or energy flow. "
+                        "Maintain a mystical, spiritual, and vintage Balinese tone."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"The image shows: {description}. "
+                        "Write a concise English prompt for Pika Labs to animate this existing poster, "
+                        "making only the main subjects move subtly while the rest remains still."
+                    )
+                }
             ]
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"(Gagal membuat prompt animasi: {e})"
+        return f"(Failed to generate animation prompt: {e})"
 
 
 # ======================================
@@ -85,35 +101,35 @@ def generate_poster(selected_hewan=None):
     tafsir = generate_unique_tafsir(hewan)
     tanggal = datetime.now().strftime("%d %B %Y")
 
-    # 🔢 Buat dua angka pelarian unik 4 digit, semua angka berbeda dan diurut
+    # 🔢 Angka pelarian unik 4 digit berurutan
     def generate_unique_4digit():
         digits = random.sample(range(0, 10), 4)
         digits.sort()
         return ''.join(str(d) for d in digits)
-    angka_pelarian = [generate_unique_4digit(), generate_unique_4digit()]
 
+    angka_pelarian = [generate_unique_4digit(), generate_unique_4digit()]
     fokus = [str(random.randint(10, 99)), str(random.randint(10, 99))]
 
+    # 🌙 Tema visual aman dari moderasi
     tema_visual = random.choice([
-        f"adegan malam mistis di mana seorang manusia sedang bermimpi di bawah cahaya bulan, "
-        f"dan sosok {hewan.lower()} muncul dari kabut spiritual di sekitarnya",
-        f"lukisan tradisional Bali menggambarkan pendeta dan {hewan.lower()} dalam upacara spiritual di candi kuno dengan dupa menyala",
-        f"pemandangan mimpi di mana {hewan.lower()} terbang di atas air suci, sementara seseorang bermeditasi dalam keheningan malam",
-        f"adegan simbolik menampilkan {hewan.lower()} dan manusia di tengah hutan Bali bercahaya lembut dengan energi mistik",
-        f"komposisi bergaya lukisan kuno menampilkan {hewan.lower()} muncul dari kabut di hadapan manusia yang berdoa, dikelilingi ornamen bunga kamboja",
+        f"an artistic Balinese-style vintage painting showing a symbolic dreamer silhouette and {hewan.lower()} amid sacred light and temple ornaments",
+        f"classic mystical Balinese scene depicting {hewan.lower()} surrounded by flowing energy and a spiritual figure represented abstractly",
+        f"vintage sepia-toned illustration showing {hewan.lower()} floating near a spiritual symbol, with floral ornaments above and below",
+        f"Balinese traditional art style depicting {hewan.lower()} as part of a dream vision with ancient textures and mystical atmosphere",
     ])
 
     prompt = f"""
-    Buat desain poster bergaya klasik vintage Bali dengan latar kertas sepia dan ornamen floral di bagian atas dan bawah.
-    Judul besar: 'SYAIR MIMPI KOKO BALI'.
-    Subjudul: 'Mimpi & Tafsir – {tanggal}'.
-    Ilustrasi utama menggambarkan {tema_visual}.
-    Tambahkan teks tafsir: '{tafsir}'
-    Di bagian bawah buat tiga kolom sejajar:
-    1. 'Kode Alam' dengan ikon {hewan} dan angka {kode_str}.
-    2. 'Angka Pelarian' berisi {angka_pelarian[0]} dan {angka_pelarian[1]}.
-    3. 'Fokus' dengan angka {fokus[0]} dan {fokus[1]} di dalam lingkaran.
-    Gunakan tipografi klasik warna coklat tua dan nuansa spiritual Bali kuno.
+    Create a vintage Balinese-style poster with sepia paper background and floral ornaments at the top and bottom.
+    Main title: 'SYAIR MIMPI KOKO BALI'.
+    Subtitle: 'Mimpi & Tafsir – {tanggal}'.
+    The main illustration shows {tema_visual}.
+    Add the short mystical interpretation text: '{tafsir}'
+    At the bottom, include three aligned sections:
+    1. 'Kode Alam' with the icon of {hewan} and number {kode_str}.
+    2. 'Angka Pelarian' with {angka_pelarian[0]} and {angka_pelarian[1]}.
+    3. 'Fokus' with {fokus[0]} and {fokus[1]} inside circles.
+    Use classic dark brown typography, maintain a spiritual and symbolic Balinese tone.
+    Make sure there is nothing sexual, violent, or inappropriate. The style must remain artistic and sacred.
     """
 
     try:
@@ -132,7 +148,6 @@ def generate_poster(selected_hewan=None):
             f.write(image_bytes)
 
         animation_prompt = generate_animation_prompt(tema_visual)
-
         return filename, hewan, kode_str, angka_pelarian, fokus, tafsir, animation_prompt
 
     except Exception as e:
