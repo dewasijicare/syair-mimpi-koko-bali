@@ -1,210 +1,126 @@
 import streamlit as st
 from openai import OpenAI
-import base64
 import random
 from datetime import datetime
-import time
-import os
 
-# ======================================
-# 🔑 KONFIGURASI API
-# ======================================
+# === KONFIGURASI CLIENT ===
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-st.set_page_config(page_title="Syair Mimpi Koko Bali", page_icon="🌺", layout="centered")
-st.title("🌺 SYAIR MIMPI KOKO BALI")
-st.caption("Panel otomatis untuk membuat poster mimpi bergaya klasik Bali dengan tafsir orisinal dan prompt animasi otomatis.")
-
-
-# ======================================
-# 📜 DATA 00–99 HEWAN
-# ======================================
-HEWAN_KODE = {
-    0: "Tapir", 1: "Ikan Bandeng", 2: "Bekicot", 3: "Angsa", 4: "Merak", 5: "Singa", 6: "Kelinci", 7: "Babi",
-    8: "Macan", 9: "Kerbau", 10: "Kelabang", 11: "Anjing", 12: "Kuda", 13: "Gajah", 14: "Onta", 15: "Tikus",
-    16: "Tawon", 17: "Bangau", 18: "Kucing", 19: "Kupu Kupu", 20: "Lalat", 21: "Walet", 22: "Capung", 23: "Kera",
-    24: "Katak", 25: "Rajawali", 26: "Naga", 27: "Kura Kura", 28: "Ayam", 29: "Belut", 30: "Ikan Mas", 31: "Udang",
-    32: "Ular", 33: "Laba Laba", 34: "Rusa", 35: "Kambing", 36: "Musang", 37: "Ikan Gabus", 38: "Cendrawasih", 39: "Kalajengking",
-    40: "Gelatik", 41: "Kepiting", 42: "Buaya", 43: "Ikan Suro", 44: "Badak", 45: "Banteng", 46: "Orang Utan", 47: "Zebra",
-    48: "Landak", 49: "Kelelawar", 50: "Beruang", 51: "Kerang", 52: "Ikan Paus", 53: "Ikan Duri", 54: "Ikan Lele", 55: "Kangguru",
-    56: "Ikan Duyung", 57: "Ulat Sutera", 58: "Cumi Cumi", 59: "Kakak Tua", 60: "Cecak", 61: "Kecoak", 62: "Walang Kadung", 63: "Kumbang",
-    64: "Kuda Laut", 65: "Ikan Hiu", 66: "Jerapah", 67: "Burung Onta", 68: "Burung Hantu", 69: "Mimi", 70: "Keledai", 71: "Macan Tutul",
-    72: "Ikan Terbang", 73: "Semut", 74: "Pinguin", 75: "Bebek", 76: "Nyamuk", 77: "Penyu", 78: "Ikan Gergaji", 79: "Orong Orong",
-    80: "Bajing", 81: "Kancil", 82: "Kuda Nil", 83: "Ikan Layur", 84: "Kalkun", 85: "Jangkrik", 86: "Ikan Sampan", 87: "Betet",
-    88: "Domba", 89: "Ikan Bendera", 90: "Trenggiling", 91: "Srigala", 92: "Ikan Tenggiri", 93: "Babi Hutan", 94: "Ikan Kakap",
-    95: "Perkutut", 96: "Ikan Nus", 97: "Tokek", 98: "Tongkol", 99: "Burung Jalak"
+# === DATA HEWAN LENGKAP ===
+hewan_dan_kode = {
+    0: "Tapir", 1: "Ikan Bandeng", 2: "Bekicot", 3: "Angsa", 4: "Merak", 5: "Singa", 6: "Kelinci", 7: "Babi", 8: "Macan",
+    9: "Kerbau", 10: "Kelabang", 11: "Anjing", 12: "Kuda", 13: "Gajah", 14: "Onta", 15: "Tikus", 16: "Tawon", 17: "Bangau",
+    18: "Kucing", 19: "Kupu-Kupu", 20: "Lalat", 21: "Walet", 22: "Capung", 23: "Kera", 24: "Katak", 25: "Rajawali", 26: "Naga",
+    27: "Kura-Kura", 28: "Ayam", 29: "Belut", 30: "Ikan Mas", 31: "Udang", 32: "Ular", 33: "Laba-Laba", 34: "Rusa",
+    35: "Kambing", 36: "Musang", 37: "Ikan Gabus", 38: "Cendrawasih", 39: "Kalajengking", 40: "Gelatik", 41: "Kepiting",
+    42: "Buaya", 43: "Ikan Suro", 44: "Badak", 45: "Banteng", 46: "Orang Utan", 47: "Zebra", 48: "Landak", 49: "Kelelawar",
+    50: "Beruang", 51: "Kerang", 52: "Ikan Paus", 53: "Ikan Duri", 54: "Ikan Lele", 55: "Kangguru", 56: "Ikan Duyung",
+    57: "Ulat Sutera", 58: "Cumi-Cumi", 59: "Kakak Tua", 60: "Cecak", 61: "Kecoak", 62: "Walang Kadung", 63: "Kumbang",
+    64: "Kuda Laut", 65: "Ikan Hiu", 66: "Jerapah", 67: "Burung Onta", 68: "Burung Hantu", 69: "Mimi", 70: "Keledai",
+    71: "Macan Tutul", 72: "Ikan Terbang", 73: "Semut", 74: "Pinguin", 75: "Bebek", 76: "Nyamuk", 77: "Penyu",
+    78: "Ikan Gergaji", 79: "Orong-Orong", 80: "Bajing", 81: "Kancil", 82: "Kuda Nil", 83: "Ikan Layur", 84: "Kalkun",
+    85: "Jangkrik", 86: "Ikan Sampan", 87: "Betet", 88: "Domba", 89: "Ikan Bendera", 90: "Trenggiling", 91: "Srigala",
+    92: "Ikan Tenggiri", 93: "Babi Hutan", 94: "Ikan Kakap", 95: "Perkutut", 96: "Ikan Nus", 97: "Tokek", 98: "Tongkol",
+    99: "Burung Jalak"
 }
 
-
-# ======================================
-# 💬 PEMBANGKIT TAFSIR ORISINAL
-# ======================================
-def generate_unique_tafsir(hewan):
-    gaya_tafsir = [
-        f"Saat {hewan.lower()} hadir dalam mimpimu, ada pesan halus dari semesta tentang arah hidup dan keseimbangan batinmu.",
-        f"Kemunculan {hewan.lower()} dalam mimpi sering dianggap sebagai panggilan untuk lebih mendengarkan intuisi dan perasaan terdalam.",
-        f"Mimpi tentang {hewan.lower()} membawa getaran spiritual — tanda bahwa perubahan besar akan datang dalam diam.",
-        f"Jika {hewan.lower()} hadir di alam tidurmu, mungkin itu simbol kekuatan, perlindungan, dan doa yang sedang dijawab oleh alam.",
-        f"Mimpi melihat {hewan.lower()} bisa jadi isyarat agar kamu lebih sabar, karena keberuntungan sedang menyiapkan jalannya perlahan.",
-        f"{hewan} dalam mimpi mencerminkan perjalanan spiritualmu — antara ketenangan, keberanian, dan bisikan halus dari dunia tak kasat mata.",
-        f"Alam bawah sadar menghadirkan {hewan.lower()} sebagai pengingat untuk menghargai tanda-tanda kecil dalam hidupmu yang sering terabaikan.",
-        f"{hewan} muncul bukan kebetulan, tetapi pesan tentang keseimbangan antara akal dan nurani, antara dunia nyata dan mimpi."
+# === FUNGSI PEMBUATAN DESKRIPSI TAFSIR ===
+def generate_tafsir(hewan):
+    tafsir_templates = [
+        f"Dalam mimpi, kemunculan {hewan.lower()} sering diartikan sebagai simbol keseimbangan antara dunia nyata dan spiritual, mengingatkanmu akan ketenangan batin.",
+        f"Sosok {hewan.lower()} dalam mimpi melambangkan perjalanan jiwa yang menuntunmu menuju kebijaksanaan dan keteguhan hati.",
+        f"Mimpi melihat {hewan.lower()} menjadi pertanda adanya pesan dari alam semesta untuk tetap rendah hati dan bersyukur atas perubahan yang datang.",
+        f"{hewan} muncul dalam mimpi membawa makna tentang keberanian menghadapi tantangan dan menemukan harmoni dalam kehidupan.",
+        f"Ketika {hewan.lower()} hadir dalam mimpimu, itu sering menandakan datangnya keberuntungan tersembunyi yang dibungkus dalam ujian kecil kehidupan.",
+        f"Mimpi tentang {hewan.lower()} menggambarkan ikatan batin antara manusia dan alam, sebuah panggilan untuk lebih selaras dengan energi semesta."
     ]
-    return random.choice(gaya_tafsir)
+    return random.choice(tafsir_templates)
 
-
-# ======================================
-# 🎞️ PEMBANGKIT PROMPT ANIMASI OTOMATIS
-# ======================================
-def generate_animation_prompt(description):
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a creative assistant who writes animation instructions for turning a static image "
-                        "into a short 7-second video. Only describe gentle motion of the *main subjects* (animals, mystical figures, or symbols). "
-                        "Do NOT invent a new story or background. Keep background, text, and frame still. "
-                        "Describe soft, natural movements like breathing, glowing, or energy flow. "
-                        "Maintain a mystical, spiritual, and vintage Balinese tone."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"The image shows: {description}. "
-                        "Write a concise English prompt for Pika Labs to animate this existing poster, "
-                        "making only the main subjects move subtly while the rest remains still."
-                    )
-                }
-            ]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"(Failed to generate animation prompt: {e})"
-
-
-# ======================================
-# 🖼️ PEMBUAT POSTER
-# ======================================
-def generate_poster(selected_hewan=None):
-    if selected_hewan == "Acak" or selected_hewan is None:
-        kode = random.choice(list(HEWAN_KODE.keys()))
-        hewan = HEWAN_KODE[kode]
-    else:
-        kode = int(selected_hewan.split("–")[0].strip())
-        hewan = selected_hewan.split("–")[1].strip()
-
-    kode_str = f"{kode:02d}"
-    tafsir = generate_unique_tafsir(hewan)
-    tanggal = datetime.now().strftime("%d %B %Y")
-
-    # 🔢 Angka pelarian unik 4 digit berurutan
-    def generate_unique_4digit():
-        digits = random.sample(range(0, 10), 4)
-        digits.sort()
-        return ''.join(str(d) for d in digits)
-
-    angka_pelarian = [generate_unique_4digit(), generate_unique_4digit()]
-    fokus = [str(random.randint(10, 99)), str(random.randint(10, 99))]
-
-    # 🌙 Tema visual aman dari moderasi
-    tema_visual = random.choice([
-        f"an artistic Balinese-style vintage painting showing a symbolic dreamer silhouette and {hewan.lower()} amid sacred light and temple ornaments",
-        f"classic mystical Balinese scene depicting {hewan.lower()} surrounded by flowing energy and a spiritual figure represented abstractly",
-        f"vintage sepia-toned illustration showing {hewan.lower()} floating near a spiritual symbol, with floral ornaments above and below",
-        f"Balinese traditional art style depicting {hewan.lower()} as part of a dream vision with ancient textures and mystical atmosphere",
+# === FUNGSI PEMBUATAN PROMPT GAMBAR ===
+def build_image_prompt(hewan, tanggal):
+    karakter_manusia = random.choice([
+        "seorang pertapa bijak duduk bersila di tepi hutan Bali",
+        "wanita muda penari Bali sedang menatap makhluk dengan tenang",
+        "anak kecil memegang lentera sambil tersenyum kepada makhluk mistik",
+        "lelaki tua berpakaian tradisional Bali sedang bermeditasi di bawah pohon beringin",
+        "seorang nelayan membawa obor di malam hari menatap makhluk di tepi pantai"
     ])
 
-    prompt = f"""
-    Create a vintage Balinese-style poster with sepia paper background and floral ornaments at the top and bottom.
-    Main title: 'SYAIR MIMPI KOKO BALI'.
-    Subtitle: 'Mimpi & Tafsir – {tanggal}'.
-    The main illustration shows {tema_visual}.
-    Add the short mystical interpretation text: '{tafsir}'
-    At the bottom, include three aligned sections:
-    1. 'Kode Alam' with the icon of {hewan} and number {kode_str}.
-    2. 'Angka Pelarian' with {angka_pelarian[0]} and {angka_pelarian[1]}.
-    3. 'Fokus' with {fokus[0]} and {fokus[1]} inside circles.
-    Use classic dark brown typography, maintain a spiritual and symbolic Balinese tone.
-    Make sure there is nothing sexual, violent, or inappropriate. The style must remain artistic and sacred.
-    """
+    prompt = (
+        f"Desain poster klasik vintage bergaya Bali dengan latar kertas sepia dan ornamen floral di atas dan bawah. "
+        f"Judul besar: 'SYAIR MIMPI KOKO BALI'. Subjudul: 'Mimpi & Tafsir – {tanggal}'. "
+        f"Ilustrasi utama di tengah menampilkan {karakter_manusia} yang berinteraksi dengan {hewan.lower()} "
+        f"dalam suasana mistis dan spiritual khas budaya Bali. "
+        f"Gunakan bingkai dekoratif klasik dan komposisi simetris di tengah poster. "
+        f"Tambahkan tekstur kertas tua dan pencahayaan hangat alami. "
+        f"Di bagian bawah, buat tiga kolom sejajar bertuliskan 'Kode Alam', 'Angka Pelarian', dan 'Fokus'. "
+        f"Gaya ilustrasi: ukiran tradisional Bali dengan nuansa mistik dan lembut."
+    )
+    return prompt
+
+# === FUNGSI PEMBUATAN PROMPT VIDEO ===
+def build_animation_prompt(hewan, scene_summary):
+    return (
+        f"Gerakkan hanya {hewan.lower()} dan elemen utamanya dengan gerakan lembut alami — seperti napas, aura cahaya, atau energi yang berdenyut pelan. "
+        f"Biarkan latar belakang, manusia, dan ornamen floral tetap diam. "
+        f"Pertahankan tone sepia klasik, suasana spiritual Bali, dan tidak mengubah komposisi gambar. "
+        f"Durasi video sekitar 7 detik."
+    )
+
+# === FUNGSI PEMBUATAN POSTER ===
+def generate_poster(selected_hewan=None):
+    kode, hewan = random.choice(list(hewan_dan_kode.items())) if not selected_hewan else (selected_hewan, hewan_dan_kode[selected_hewan])
+    tanggal = datetime.now().strftime("%d %B %Y")
+
+    tafsir = generate_tafsir(hewan)
+
+    # angka pelarian unik & berurutan
+    def generate_unique_angka():
+        angka = random.sample(range(0, 10), 4)
+        angka.sort()
+        return ''.join(map(str, angka))
+
+    angka_pelarian1 = generate_unique_angka()
+    angka_pelarian2 = generate_unique_angka()
+    fokus = random.sample(range(10, 99), 2)
+    kode_str = f"{kode:02d}"  # tampil 2 digit
+
+    prompt = build_image_prompt(hewan, tanggal)
 
     try:
         response = client.images.generate(
             model="gpt-image-1",
             prompt=prompt,
-            size="1024x1536",
-            quality="high"
+            size="1024x1536"
         )
-
-        image_base64 = response.data[0].b64_json
-        image_bytes = base64.b64decode(image_base64)
-
-        filename = f"syair_{kode_str}_{hewan.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-        with open(filename, "wb") as f:
-            f.write(image_bytes)
-
-        animation_prompt = generate_animation_prompt(tema_visual)
-        return filename, hewan, kode_str, angka_pelarian, fokus, tafsir, animation_prompt
+        image_url = response.data[0].url
+        animation_prompt = build_animation_prompt(hewan, tafsir)
+        return image_url, hewan, kode_str, tafsir, angka_pelarian1, angka_pelarian2, fokus, animation_prompt
 
     except Exception as e:
-        return None, None, None, None, None, str(e), None
+        st.error(f"Gagal membuat poster. Error: {e}")
+        return None, None, None, None, None, None, None, None
 
+# === STREAMLIT UI ===
+st.set_page_config(page_title="Syair Mimpi Koko Bali", page_icon="🌺", layout="centered")
 
-# ======================================
-# 📋 STREAMLIT UI
-# ======================================
-if "history" not in st.session_state:
-    st.session_state.history = []
+st.title("🌺 SYAIR MIMPI KOKO BALI")
+st.markdown("Panel otomatis untuk membuat poster mimpi bergaya klasik Bali dengan ilustrasi mistik yang bercerita.")
 
-hewan_list = ["Acak"] + [f"{k:02d} – {v}" for k, v in HEWAN_KODE.items()]
-selected_hewan = st.selectbox("Pilih Hewan untuk Tafsir:", hewan_list)
+hewan_options = [f"{kode:02d} - {nama}" for kode, nama in hewan_dan_kode.items()]
+selected_option = st.selectbox("Pilih Hewan atau Acak:", ["Acak"] + hewan_options)
 
 if st.button("✨ Generate Syair Hari Ini"):
-    with st.spinner("🪄 Merangkai kisah mistis dan menciptakan visual..."):
-        time.sleep(1)
-        filename, hewan, kode, angka_pelarian, fokus, tafsir, anim_prompt = generate_poster(selected_hewan)
+    with st.spinner("Menyiapkan karya mistik Bali..."):
+        selected_hewan = None if selected_option == "Acak" else int(selected_option.split(" - ")[0])
+        image_url, hewan, kode, tafsir, a1, a2, fokus, anim_prompt = generate_poster(selected_hewan)
 
-    if filename:
-        st.image(filename, caption=f"🪶 SYAIR {hewan.upper()} – Kode Alam {kode}")
-        st.markdown(f"**Kode Alam:** {kode} ({hewan})")
-        st.markdown(f"**Angka Pelarian:** {angka_pelarian[0]} – {angka_pelarian[1]}")
-        st.markdown(f"**Fokus:** {fokus[0]} & {fokus[1]}")
-        st.markdown(f"**Tafsir:** {tafsir}")
-        st.markdown("---")
-        st.subheader("🎞️ Prompt Animasi Otomatis untuk Pika Labs")
-        st.code(anim_prompt, language="text")
-
-        with open(filename, "rb") as img_file:
-            st.download_button(
-                label="💾 Download Poster",
-                data=img_file,
-                file_name=filename,
-                mime="image/png"
-            )
-
-        st.session_state.history.append({
-            "filename": filename,
-            "hewan": hewan,
-            "kode": kode,
-            "tafsir": tafsir,
-            "anim_prompt": anim_prompt
-        })
-        st.success("✅ Poster berhasil dibuat dan prompt animasi siap digunakan!")
-    else:
-        st.warning(f"Gagal membuat poster. Error: {tafsir}")
-
-
-# ======================================
-# 🗂️ RIWAYAT SYAIR
-# ======================================
-if st.session_state.history:
-    st.subheader("🗂️ Riwayat Syair yang Pernah Dibuat")
-    cols = st.columns(3)
-    for i, item in enumerate(reversed(st.session_state.history[-9:])):
-        with cols[i % 3]:
-            st.image(item["filename"], use_container_width=True)
-            st.caption(f"{item['kode']} – {item['hewan']}")
+        if image_url:
+            st.image(image_url, caption=f"SYAIR {hewan.upper()} – Kode Alam {kode}")
+            st.markdown(f"**Tafsir:** {tafsir}")
+            st.markdown(f"**Kode Alam:** {kode}  **Angka Pelarian:** {a1} • {a2}  **Fokus:** {fokus[0]} • {fokus[1]}")
+            st.divider()
+            st.subheader("🎞️ Prompt Animasi Otomatis")
+            st.text_area("Gunakan prompt ini di Pika Labs:", anim_prompt, height=160)
+        else:
+            st.warning("⚠️ Gagal menghasilkan gambar, silakan coba lagi.")
